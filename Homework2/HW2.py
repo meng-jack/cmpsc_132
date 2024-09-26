@@ -514,8 +514,8 @@ def run_tests():
     # doctest.testmod(verbose=True)
 
     # Run tests per function - Uncomment the next line to run doctest by function. Replace Course with the name of the function you want to test
-    doctest.run_docstring_examples(
-        StudentAccount, globals(), name="HW2", verbose=True)
+    #doctest.run_docstring_examples(
+    #    StudentAccount, globals(), name="HW2", verbose=True)
 
 
 if __name__ == "__main__":
