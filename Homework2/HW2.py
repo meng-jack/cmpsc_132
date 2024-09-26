@@ -1,7 +1,8 @@
 # HW2
 # REMINDER: The work in this assignment must be your own original work and must be completed alone.
 
-import random, os
+import random
+import os
 
 
 class Course:
@@ -74,7 +75,7 @@ class Catalog:
         target_path = os.path.join(os.path.dirname(__file__), file)
         with open(target_path, "r") as f:
             course_info = f.readlines()
-        for course in course_info.split("\n"):
+        for course in course_info:
             course = course.split(",")
             self.addCourse(course[0], course[1], course[2])
 
@@ -118,7 +119,7 @@ class Semester:
     """
 
     def __init__(self):
-        self.courses = {}
+        self.courses: dict[str, Course] = {}
 
     def __str__(self):
         return (
@@ -212,7 +213,7 @@ class Person:
 
     __repr__ = __str__
 
-    def get_ssn(self):
+    def get_ssn(self) -> str:
         return self.ssn
 
     def __eq__(self, other):
@@ -266,7 +267,7 @@ class Staff(Person):
 
     @property
     def id(self):
-        return f"905{"".join([initial[0].lower() for initial in super().name.split(" ") if initial])}{super().get_ssn[-4:]}"
+        return f"905{"".join([initial[0].lower() for initial in super().name.split(" ") if initial])}{super().get_ssn()[-4:]}"
 
     @property
     def getSupervisor(self):
@@ -294,10 +295,6 @@ class Staff(Person):
 
     def createStudent(self, person: Person):
         return Student(person.name, person.ssn, "Freshman")
-
-
-class Student(Person):
-    pass
 
 
 class StudentAccount:
@@ -357,14 +354,14 @@ class StudentAccount:
     7900.0
     """
 
-    def __init__(self, student: Student):
+    def __init__(self, student):
         self.student = student
         self.balance = 0
-        self.loans: {int, Loan} = {}
+        self.loans: dict[int, Loan] = {}
         self.CREDIT_PRICE = 1000
 
     def __str__(self):
-        return f""" 
+        return f"""
         Name: {self.student.name}
         ID: {self.student.id}
         Balance: {self.balance}
@@ -440,7 +437,7 @@ class Student(Person):
         self.classCode = year
         self.hold = False
         self.active = True
-        self.semesters: {int, Semester} = {}
+        self.semesters: dict[int, Semester] = {}
         self.account = self.__createStudentAccount()
 
     def __str__(self):
@@ -454,7 +451,7 @@ class Student(Person):
 
     @property
     def id(self):
-        return f"{"".join([initial[0].lower() for initial in super().name.split(" ") if initial])}{super().get_ssn[-4:]}"
+        return f"{"".join([initial[0].lower() for initial in super().name.split(" ") if initial])}{super().get_ssn()[-4:]}"
 
     def registerSemester(self) -> None | str:
         if self.hold or not self.active:
@@ -471,17 +468,42 @@ class Student(Person):
             )
         )
 
-    def enrollCourse(self, cid, catalog):
+    def enrollCourse(self, cid, catalog: Catalog):
         if self.hold or not self.active:
             return "Unsuccessful operation"
-        
+        if cid in catalog.courseOfferings:
+            curr = max(self.semesters.keys())
+            if cid in self.semesters[curr].courses:
+                return "Course already enrolled"
+            else:
+                self.semesters[curr].addCourse(catalog.courseOfferings[cid])
+                if not self.account == None:
+                    self.account.chargeAccount(self.account.CREDIT_PRICE)
+                return "Course added successfully"
+        else:
+            return "Course not found"
 
     def dropCourse(self, cid):
-        # YOUR CODE STARTS HERE
-        pass
+        if self.hold or not self.active:
+            return "Unsuccessful operation"
+        curr = max(self.semesters.keys())
+        if cid in self.semesters[curr].courses:
+            del self.semesters[curr].courses[cid]
+            if not self.account == None:
+                self.account.makePayment(self.account.CREDIT_PRICE / 2)
+            return "Course dropped successfully"
+        return "Course not found"
 
-    def getLoan(self, amount):
-        pass
+    def getLoan(self, amount) -> None | str:
+        if not self.active:
+            return "Unsuccessful operation"
+        curr = max(self.semesters.keys())
+        if not self.semesters[curr].isFullTime:
+            return "Not full-time"
+        loan = Loan(amount)
+        if not self.account == None:
+            self.account.loans[loan.loan_id] = loan
+            self.account.makePayment(amount)
 
 
 def run_tests():
