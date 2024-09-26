@@ -57,7 +57,7 @@ class Catalog:
     """
 
     def __init__(self):
-        self.courseOfferings = {}
+        self.courseOfferings: dict[str, Course] = {}
 
     def addCourse(self, cid, cname, credits):
         if cid in self.courseOfferings:
@@ -77,7 +77,7 @@ class Catalog:
             course_info = f.readlines()
         for course in course_info:
             course = course.split(",")
-            self.addCourse(course[0], course[1], course[2])
+            self.addCourse(course[0], course[1], course[2].replace("\n", ""))
 
 
 class Semester:
@@ -123,7 +123,7 @@ class Semester:
 
     def __str__(self):
         return (
-            ";".join(self.courses.keys())
+            "; ".join(self.courses.keys())
             if len(self.courses.keys()) > 0
             else "No courses"
         )
@@ -146,7 +146,7 @@ class Semester:
     def totalCredits(self):
         t = 0
         for cid in self.courses:
-            t += self.courses[cid].credits
+            t += int(self.courses[cid].credits)
         return t
 
     @property
@@ -209,7 +209,7 @@ class Person:
         self.ssn = ssn
 
     def __str__(self):
-        return f"Person({self.name},***-**-{self.ssn[-4:]})"
+        return f"Person({self.name}, ***-**-{self.ssn[-4:]})"
 
     __repr__ = __str__
 
@@ -217,7 +217,7 @@ class Person:
         return self.ssn
 
     def __eq__(self, other):
-        return isinstance(other, Person) and other.get_ssn == self.ssn
+        return isinstance(other, Person) and other.get_ssn() == self.ssn
 
 
 class Staff(Person):
@@ -261,13 +261,13 @@ class Staff(Person):
         self.supervisor = supervisor
 
     def __str__(self):
-        return f"Staff({super().name},{self.id})"
+        return f"Staff({self.name}, {self.id})"
 
     __repr__ = __str__
 
     @property
     def id(self):
-        return f"905{"".join([initial[0].lower() for initial in super().name.split(" ") if initial])}{super().get_ssn()[-4:]}"
+        return f"905{"".join([initial[0].lower() for initial in self.name.split(" ") if initial])}{self.get_ssn()[-4:]}"
 
     @property
     def getSupervisor(self):
@@ -356,16 +356,12 @@ class StudentAccount:
 
     def __init__(self, student):
         self.student = student
-        self.balance = 0
+        self.balance: int = 0
         self.loans: dict[int, Loan] = {}
-        self.CREDIT_PRICE = 1000
+        self.CREDIT_PRICE: int = 1000
 
     def __str__(self):
-        return f"""
-        Name: {self.student.name}
-        ID: {self.student.id}
-        Balance: {self.balance}
-        """
+        return f"Name: {self.student.name}\nID: {self.student.id}\nBalance: ${self.balance}"
 
     __repr__ = __str__
 
@@ -373,7 +369,7 @@ class StudentAccount:
         self.balance -= amount
         return self.balance
 
-    def chargeAccount(self, amount):
+    def chargeAccount(self, amount: int):
         self.balance += amount
         return self.balance
 
@@ -441,7 +437,7 @@ class Student(Person):
         self.account = self.__createStudentAccount()
 
     def __str__(self):
-        return f"Student({super().name}, {self.id}, {self.classCode})"
+        return f"Student({self.name}, {self.id}, {self.classCode})"
 
     __repr__ = __str__
 
@@ -451,7 +447,7 @@ class Student(Person):
 
     @property
     def id(self):
-        return f"{"".join([initial[0].lower() for initial in super().name.split(" ") if initial])}{super().get_ssn()[-4:]}"
+        return f"{"".join([initial[0].lower() for initial in self.name.split(" ") if initial])}{self.get_ssn()[-4:]}"
 
     def registerSemester(self) -> None | str:
         if self.hold or not self.active:
@@ -478,7 +474,10 @@ class Student(Person):
             else:
                 self.semesters[curr].addCourse(catalog.courseOfferings[cid])
                 if not self.account == None:
-                    self.account.chargeAccount(self.account.CREDIT_PRICE)
+                    self.account.chargeAccount(
+                        self.account.CREDIT_PRICE
+                        * int(catalog.courseOfferings[cid].credits)
+                    )
                 return "Course added successfully"
         else:
             return "Course not found"
@@ -488,9 +487,15 @@ class Student(Person):
             return "Unsuccessful operation"
         curr = max(self.semesters.keys())
         if cid in self.semesters[curr].courses:
-            del self.semesters[curr].courses[cid]
             if not self.account == None:
-                self.account.makePayment(self.account.CREDIT_PRICE / 2)
+                self.account.makePayment(
+                    (
+                        self.account.CREDIT_PRICE
+                        * int(self.semesters[curr].courses[cid].credits)
+                    )
+                    / 2
+                )
+            self.semesters[curr].dropCourse(self.semesters[curr].courses[cid])
             return "Course dropped successfully"
         return "Course not found"
 
@@ -510,10 +515,10 @@ def run_tests():
     import doctest
 
     # Run tests in all docstrings
-    doctest.testmod(verbose=True)
+    # doctest.testmod(verbose=True)
 
     # Run tests per function - Uncomment the next line to run doctest by function. Replace Course with the name of the function you want to test
-    # doctest.run_docstring_examples(Course, globals(), name='HW2',verbose=True)
+    doctest.run_docstring_examples(StudentAccount, globals(), name="HW2", verbose=True)
 
 
 if __name__ == "__main__":
