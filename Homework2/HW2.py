@@ -354,11 +354,12 @@ class StudentAccount:
     7900.0
     """
 
+    CREDIT_PRICE: int = 1000
+
     def __init__(self, student):
         self.student = student
         self.balance: int = 0
         self.loans: dict[int, Loan] = {}
-        self.CREDIT_PRICE: int = 1000
 
     def __str__(self):
         return f"Name: {self.student.name}\nID: {self.student.id}\nBalance: ${self.balance}"
@@ -475,7 +476,7 @@ class Student(Person):
                 self.semesters[curr].addCourse(catalog.courseOfferings[cid])
                 if not self.account == None:
                     self.account.chargeAccount(
-                        self.account.CREDIT_PRICE
+                        StudentAccount.CREDIT_PRICE
                         * int(catalog.courseOfferings[cid].credits)
                     )
                 return "Course added successfully"
@@ -489,12 +490,7 @@ class Student(Person):
         if cid in self.semesters[curr].courses:
             if not self.account == None:
                 self.account.makePayment(
-                    (
-                        self.account.CREDIT_PRICE
-                        * int(self.semesters[curr].courses[cid].credits)
-                    )
-                    / 2
-                )
+                    StudentAccount.CREDIT_PRICE * int(self.semesters[curr].courses[cid].credits) / 2)
             self.semesters[curr].dropCourse(self.semesters[curr].courses[cid])
             return "Course dropped successfully"
         return "Course not found"
@@ -518,7 +514,8 @@ def run_tests():
     # doctest.testmod(verbose=True)
 
     # Run tests per function - Uncomment the next line to run doctest by function. Replace Course with the name of the function you want to test
-    doctest.run_docstring_examples(StudentAccount, globals(), name="HW2", verbose=True)
+    doctest.run_docstring_examples(
+        StudentAccount, globals(), name="HW2", verbose=True)
 
 
 if __name__ == "__main__":
