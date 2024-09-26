@@ -267,7 +267,7 @@ class Staff(Person):
 
     @property
     def id(self):
-        return f"905{"".join([initial[0].lower() for initial in self.name.split(" ") if initial])}{self.get_ssn()[-4:]}"
+        return f"905{''.join([initial[0].lower() for initial in self.name.split(' ') if initial])}{self.get_ssn()[-4:]}"
 
     @property
     def getSupervisor(self):
@@ -448,7 +448,7 @@ class Student(Person):
 
     @property
     def id(self):
-        return f"{"".join([initial[0].lower() for initial in self.name.split(" ") if initial])}{self.get_ssn()[-4:]}"
+        return f"{''.join([initial[0].lower() for initial in self.name.split(' ') if initial])}{self.get_ssn()[-4:]}"
 
     def registerSemester(self) -> None | str:
         if self.hold or not self.active:
