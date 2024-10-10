@@ -68,7 +68,7 @@ class Malloc_Library:
     def __repr__(self):  # You are not allowed to modify this method
         current = self.head
         out = []
-        while current != None:
+        while current is not None:
             out.append(str(current.value))
             current = current.next
         return " -> ".join(out)
@@ -78,7 +78,7 @@ class Malloc_Library:
     def __len__(self):
         i = 0
         curr = self.head
-        while curr != None:
+        while curr is not None:
             i += 1
             curr = curr.next
         return i
@@ -88,30 +88,30 @@ class Malloc_Library:
             raise IndexError
         curr = self.head
         for i in range(pos):
-            curr = curr.next
-        curr.value = value
+            curr = curr.next  # type: ignore
+        curr.value = value  # type: ignore
 
     def __getitem__(self, pos):
         if pos >= len(self):
             return IndexError
         curr = self.head
         for i in range(pos):
-            curr = curr.next
-        return curr.value
+            curr = curr.next  # type: ignore
+        return curr.value  # type: ignore
 
     def malloc(self, size):
         self.head = Node()
         curr = self.head
         for i in range(size - 1):
-            curr.next = Node()
-            curr = curr.next
+            curr.next = Node()  # type: ignore
+            curr = curr.next  # type: ignore
 
     def calloc(self, size):
         self.head = Node(0)
         curr = self.head
         for i in range(size - 1):
-            curr.next = Node(0)
-            curr = curr.next
+            curr.next = Node(0)  # type: ignore
+            curr = curr.next  # type: ignore
 
     def free(self):
         if self.head is None:
@@ -124,7 +124,9 @@ class Malloc_Library:
         self.head = None
 
     def realloc(self, size):
-        if size > len(self):
+        if len(self) == 0:
+            self.malloc(size)
+        elif size > len(self):
             if self.head is None:
                 self.malloc(size)
             else:
@@ -132,43 +134,49 @@ class Malloc_Library:
                 while curr.next is not None:
                     curr = curr.next
                 for i in range(size - len(self)):
-                    curr.next = Node()
-                    curr = curr.next
+                    curr.next = Node()  # type: ignore
+                    curr = curr.next  # type: ignore
         elif size < len(self):
             curr = self.head
             for i in range(size - 1):
-                curr = curr.next
-            temp = curr.next
-            curr.next = None
+                curr = curr.next  # type: ignore
+            temp = curr.next  # type: ignore
+            curr.next = None  # type: ignore
             while temp is not None:
-                temp2 = temp.next
-                temp.next = None
+                curr = temp
+                temp = temp.next
+                curr.next = None
         elif size == 0:
             self.free()
-        else:
-            self.malloc(size)
 
-    def memcpy(self, ptr1_start_idx, pointer_2, ptr2_start_idx, size):
-        """
-        This method is intended to copy values from one list (original list) to another (pointer_2)
-starting at specified positions and up to a given number of nodes (size). The function takes in few
-arguments: self is original list or pointer, ptr1_start_idx is the starting position in the original list
-from  which  copying  begins,  pointer_2  is  the  target  list  where  the  values  will  be  copied,
-ptr2_start_idx is the starting position in the target list where copied values will be placed. Positions
-follow the syntax of Python sequences [0, size-1]. No changes are made to the lists when any of
-the starting points are not within the corresponding list size. size parameter is the number of values
-to be copied from source (self) to destination (pointer_2). If size is larger than original list’s length,
-then size becomes the size of the original list.
-NOTE :-  Memory allocation is done only when malloc(), calloc() or realloc() methods are called
-on the pointer (list). So if there is no memory then, copying of values is not done. This is depicted
-in the first examples in the doctests given below.
-        """
-        
+    def memcpy(
+        self,
+        ptr1_start_idx: int,
+        pointer_2: "Malloc_Library",
+        ptr2_start_idx: int,
+        size: int,
+    ) -> None:
+        if ptr1_start_idx >= len(self) or ptr2_start_idx >= len(pointer_2):
+            return
+        if ptr1_start_idx + size > len(self):
+            size = len(self) - ptr1_start_idx
+        if ptr2_start_idx + size > len(pointer_2):
+            size = len(pointer_2) - ptr2_start_idx
+        ptr1 = self.head
+        for i in range(ptr1_start_idx):
+            ptr1 = ptr1.next  # type: ignore
+        ptr2 = pointer_2.head
+        for i in range(ptr2_start_idx):
+            ptr2 = ptr2.next  # type: ignore
+        for i in range(size):
+            ptr2.value = ptr1.value  # type: ignore
+            ptr1 = ptr1.next  # type: ignore
+            ptr2 = ptr2.next  # type: ignore
 
 
 def run_tests():
     import doctest
-    doctest.testmod(verbose=True)
+    doctest.testmod()
 
 
 if __name__ == "__main__":
