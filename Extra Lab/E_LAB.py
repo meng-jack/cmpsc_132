@@ -4,7 +4,6 @@
 
 # ========= PART 1 ================
 
-from calendar import c
 from typing import Callable
 
 
